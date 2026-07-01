@@ -7,6 +7,14 @@ name = "devos"
 version = "0.0.1"
 description = "Developer Operating System - internal engineering platform CLI"
 requires-python = ">=3.11"
+dependencies = [
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
 
 [project.scripts]
 devos = "devos.cli:main"
