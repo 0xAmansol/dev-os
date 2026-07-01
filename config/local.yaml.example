@@ -1,0 +1,16 @@
+# Copy this file to config/local.yaml (gitignored) and fill in real values
+# for your machine. loader.py merges local.yaml on top of defaults.yaml.
+
+kubernetes:
+  default_namespace: "my-namespace"
+
+jumpbox:
+  host: "jumpbox.internal.example.com"
+
+postgres:
+  default_alias: "primary"
+
+grafana:
+  base_url: "https://grafana.internal.example.com"
+  dashboards:
+    failed_jobs: "/d/abc123/failed-jobs"

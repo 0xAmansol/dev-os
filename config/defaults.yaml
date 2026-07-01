@@ -1,0 +1,19 @@
+# Committed defaults. Never put real infra values (hostnames, namespaces,
+# credentials) here — those belong in config/local.yaml (gitignored).
+# local.yaml.example documents the keys a real local.yaml must provide.
+
+state_dir: "~/.dev-os/state"
+worktrees_dir: "~/worktrees"
+
+kubernetes:
+  default_namespace: null
+
+jumpbox:
+  host: null
+
+postgres:
+  default_alias: null
+
+grafana:
+  base_url: null
+  dashboards: {}

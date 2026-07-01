@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "devos"
+version = "0.0.1"
+description = "Developer Operating System - internal engineering platform CLI"
+requires-python = ">=3.11"
+
+[project.scripts]
+devos = "devos.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["python"]
