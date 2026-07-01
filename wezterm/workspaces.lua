@@ -5,28 +5,46 @@
 -- devos itself.
 local wezterm = require("wezterm")
 local mux = wezterm.mux
+local devos_path = require("devos_path")
 
 local M = {}
 
-local function run_devos(args)
-	local ok, stdout, stderr = wezterm.run_child_process(args)
+-- WezTerm's run_child_process doesn't run in the calling pane's cwd, so we
+-- explicitly `cd` into it via a shell wrapper before invoking devos.
+local function run_devos(args, cwd)
+	local shell_cmd = "cd " .. wezterm.shell_quote_arg(cwd) .. " && " .. wezterm.shell_quote_arg(devos_path.bin())
+	for _, a in ipairs(args) do
+		shell_cmd = shell_cmd .. " " .. wezterm.shell_quote_arg(a)
+	end
+	local ok, stdout, stderr = wezterm.run_child_process({ "zsh", "-lc", shell_cmd })
 	return ok, stdout or "", stderr or ""
 end
 
-function M.start_ticket(key)
-	local ok, stdout, stderr = run_devos({ "devos", "ticket", "start", key })
+local function pane_cwd(pane)
+	local cwd_url = pane:get_current_working_dir()
+	return cwd_url and cwd_url.file_path or nil
+end
+
+function M.start_ticket(window, pane, key)
+	local cwd = pane_cwd(pane)
+	if not cwd then
+		window:toast_notification("devos", "Could not determine the current pane's working directory.", nil, 4000)
+		return
+	end
+
+	local ok, stdout, stderr = run_devos({ "ticket", "start", key }, cwd)
 	if not ok then
-		wezterm.log_error("devos ticket start failed: " .. stderr .. stdout)
+		window:toast_notification("devos", "ticket start failed: " .. stderr .. stdout, nil, 5000)
 		return
 	end
 
 	local worktree_path = stdout:match("at%s+(%S.-)%s*$")
 	if not worktree_path then
-		wezterm.log_error("devos: could not parse worktree path from: " .. stdout)
+		window:toast_notification("devos", "Could not parse worktree path from: " .. stdout, nil, 5000)
 		return
 	end
 
-	local _, editor_pane, window = mux.spawn_window({
+	local _, editor_pane = mux.spawn_window({
 		workspace = key,
 		cwd = worktree_path,
 	})
@@ -36,18 +54,21 @@ function M.start_ticket(key)
 	mux.set_active_workspace(key)
 end
 
-function M.close_ticket(key)
-	local ok, stdout, stderr = run_devos({ "devos", "ticket", "close", key })
+function M.close_ticket(window, pane, key)
+	local cwd = pane_cwd(pane) or wezterm.home_dir
+
+	local ok, stdout, stderr = run_devos({ "ticket", "close", key }, cwd)
 	if not ok then
-		wezterm.log_error("devos ticket close failed: " .. stderr .. stdout)
+		window:toast_notification("devos", "ticket close failed: " .. stderr .. stdout, nil, 5000)
 		return
 	end
 
-	for _, window in ipairs(mux.all_windows()) do
-		if window:get_workspace() == key then
-			window:close()
+	for _, w in ipairs(mux.all_windows()) do
+		if w:get_workspace() == key then
+			w:close()
 		end
 	end
+	window:toast_notification("devos", "Closed ticket " .. key, nil, 3000)
 end
 
 return M

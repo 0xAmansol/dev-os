@@ -3,6 +3,7 @@
 local wezterm = require("wezterm")
 local act = wezterm.action
 local workspaces = require("workspaces")
+local devos_path = require("devos_path")
 
 local M = {}
 
@@ -14,9 +15,9 @@ M.keys = {
 		mods = "LEADER",
 		action = act.PromptInputLine({
 			description = "Start ticket (key):",
-			action = wezterm.action_callback(function(_, _, line)
+			action = wezterm.action_callback(function(window, pane, line)
 				if line and line ~= "" then
-					workspaces.start_ticket(line)
+					workspaces.start_ticket(window, pane, line)
 				end
 			end),
 		}),
@@ -26,9 +27,9 @@ M.keys = {
 		mods = "LEADER",
 		action = act.PromptInputLine({
 			description = "Close ticket (key):",
-			action = wezterm.action_callback(function(_, _, line)
+			action = wezterm.action_callback(function(window, pane, line)
 				if line and line ~= "" then
-					workspaces.close_ticket(line)
+					workspaces.close_ticket(window, pane, line)
 				end
 			end),
 		}),
@@ -37,7 +38,7 @@ M.keys = {
 		key = "l",
 		mods = "LEADER",
 		action = act.SpawnCommandInNewTab({
-			args = { "zsh", "-lc", "devos ticket list; exec zsh" },
+			args = { "zsh", "-lc", devos_path.bin() .. " ticket list; exec zsh" },
 		}),
 	},
 }
