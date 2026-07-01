@@ -65,17 +65,21 @@ function M.close_ticket(window, pane, key)
 
 	-- MuxWindow has no close()/kill(); a window only disappears once all of
 	-- its tabs are closed, so drive that via perform_action on its gui_window.
+	-- Wrapped in pcall: the window may already be gone (e.g. closed by hand),
+	-- which is a fine outcome, not an error.
 	for _, w in ipairs(mux.all_windows()) do
-		if w:get_workspace() == key then
-			local gui_win = w:gui_window()
-			if gui_win then
-				local guard = 0
-				while #w:tabs() > 0 and guard < 50 do
-					gui_win:perform_action(wezterm.action.CloseCurrentTab({ confirm = false }), w:active_pane())
-					guard = guard + 1
+		pcall(function()
+			if w:get_workspace() == key then
+				local gui_win = w:gui_window()
+				if gui_win then
+					local guard = 0
+					while #w:tabs() > 0 and guard < 50 do
+						gui_win:perform_action(wezterm.action.CloseCurrentTab({ confirm = false }), w:active_pane())
+						guard = guard + 1
+					end
 				end
 			end
-		end
+		end)
 	end
 	window:toast_notification("devos", "Closed ticket " .. key, nil, 3000)
 end
